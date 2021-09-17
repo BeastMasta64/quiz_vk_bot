@@ -1,0 +1,4 @@
+aiohttp
+PyYAML
+gino
+aiohttp_apispec
