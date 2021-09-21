@@ -32,6 +32,12 @@ class VkApiAccessor(BaseAccessor):
         self.poller = Poller(app.store)
         self.logger.info('start polling')
         await self.poller.start()
+        await self.app.store.vk_api.send_message(
+            Message(
+                text='Запущен!',
+                user_id=int(self.app.config.bot.admin)
+            )
+        )
 
     async def disconnect(self, app: 'Application'):
         if self.session:
@@ -100,8 +106,8 @@ class VkApiAccessor(BaseAccessor):
     async def send_message(self, message: Message) -> None:
         async with self.session.get(
             self._build_query(
-                API_PATH,
-                "messages.send",
+                host=API_PATH,
+                method="messages.send",
                 params={
                     "user_id": message.user_id,
                     "random_id": random.randint(1, 2 ** 32),
@@ -109,6 +115,20 @@ class VkApiAccessor(BaseAccessor):
                     "message": message.text,
                     "access_token": self.app.config.bot.token,
                 },
+            )
+        ) as resp:
+            data = await resp.json()
+            self.logger.info(data)
+
+    async def get_user(self, id: int):
+        async with self.session.get(
+            self._build_query(
+                host=API_PATH,
+                method='users.get',
+                params={
+                    'user_ids': id,
+                    'name_case': 'nom'
+                }
             )
         ) as resp:
             data = await resp.json()

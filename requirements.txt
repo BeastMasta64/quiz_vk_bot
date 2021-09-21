@@ -2,3 +2,5 @@ aiohttp
 PyYAML
 gino
 aiohttp_apispec
+alembic
+psycopg2

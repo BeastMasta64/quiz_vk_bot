@@ -1,6 +1,7 @@
 from typing import Optional
 
 from aiohttp.web import Application as AiohttpApplication
+
 from app.web.logger import setup_logging
 
 from app.store.database.database import Database
