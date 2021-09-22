@@ -10,6 +10,7 @@ from app.store import Store, setup_store
 from aiohttp_apispec import setup_aiohttp_apispec
 
 from app.web.config import Config, setup_config
+from app.web.middlewares import setup_middlewares
 
 
 class Application(AiohttpApplication):
@@ -26,4 +27,5 @@ def setup_app(config_path: str) -> Application:
         app, title="Vk Quiz Bot", url="/docs/json", swagger_path="/docs"
     )
     setup_store(app)
+    setup_middlewares(app)
     return app

@@ -1,8 +1,8 @@
 """first migration
 
-Revision ID: b0a3d1b7a83e
+Revision ID: 8dc828c0b364
 Revises: 
-Create Date: 2021-09-21 13:51:08.162535
+Create Date: 2021-09-21 20:16:04.994174
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'b0a3d1b7a83e'
+revision = '8dc828c0b364'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -33,9 +33,9 @@ def upgrade():
     op.create_table('games',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('theme_id', sa.Integer(), nullable=False),
-    sa.Column('completed', sa.Boolean(), nullable=False),
-    sa.Column('chat_id', sa.Integer(), nullable=False),
-    sa.Column('used_questions', postgresql.JSON(astext_type=sa.Text()), server_default='{}', nullable=True),
+    sa.Column('completed', sa.Boolean(), nullable=True),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('used_questions', postgresql.ARRAY(sa.Integer()), nullable=False),
     sa.ForeignKeyConstraint(['theme_id'], ['themes.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

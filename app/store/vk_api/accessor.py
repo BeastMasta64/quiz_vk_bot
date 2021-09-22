@@ -127,9 +127,11 @@ class VkApiAccessor(BaseAccessor):
                 method='users.get',
                 params={
                     'user_ids': id,
-                    'name_case': 'nom'
+                    'name_case': 'nom',
+                    "access_token": self.app.config.bot.token
                 }
             )
         ) as resp:
             data = await resp.json()
             self.logger.info(data)
+        return data

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, List
 
-from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy import Integer
+from sqlalchemy.dialects.postgresql import JSON, ARRAY
 
 from app.store.database.gino import db
 
@@ -94,9 +95,9 @@ class GameModel(db.Model):
     theme_id = db.Column(db.Integer(), db.ForeignKey('themes.id'), nullable=False)
     completed = db.Column(db.Boolean(), default=False)
     user_id = db.Column(db.Integer(), nullable=False)
-    used_questions = db.Column(JSON, server_default="{}")
+    questions_id = db.Column(ARRAY(Integer), nullable=False)
 
-    question_id = db.ArrayProperty(prop_name="used_questions")
+
 
 class PlayerScoreModel(db.Model):
     __tablename__ = "players_scores"
@@ -104,7 +105,7 @@ class PlayerScoreModel(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     game_id = db.Column(db.Integer(), db.ForeignKey('games.id'), nullable=False)
     vk_id = db.Column(db.Integer(), db.ForeignKey('players.vk_id'), nullable=False)
-    points = db.Column(db.Integer(), nullable=False)
+    points = db.Column(db.Integer(), default=0)
 
 class PlayerModel(db.Model):
     __tablename__ = "players"
