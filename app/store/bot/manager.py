@@ -1,3 +1,4 @@
+import datetime
 from logging import getLogger
 
 from app.store.vk_api.dataclasses import Update, Message
@@ -12,28 +13,43 @@ class BotManager:
 
     async def handle_updates(self, updates: list[Update]):
         for update in updates:
+
             text = update.object.message.text
-            user_id = update.object.message.from_id
-            if text == '/t':
-                data = await self.app.store.vk_api.get_user(user_id)
-                print(data)
-                print(type(data))
-            if text == '/g':
-                await self.app.store.game_logic_accessor.start_game(user_id=user_id)
-            else:
-                print('else')
-                print(type(user_id))
-                game = await self.app.store.game_db_accessor.get_game(user_id=user_id)
-                print(f'game {game}\n'
-                      f'{game.id}')
-                if game:
-                    correct_guess = await self.app.store.game_logic_accessor.check_answer(game=game, text=text, vk_id=user_id)
-                    if correct_guess:
-                        await self.app.store.game_logic_accessor.ask_question(game)
+
+            game = await self.app.store.game_db_accessor.get_game(peer_id=update.object.message.peer_id)
+            if game:
+                if text == '/g':
+                    await self.app.store.vk_api.send_message(message=Message(
+                        peer_id=update.object.message.peer_id,
+                        text='Игра уже создана!\n'
+                             'Напишите /stop, чтобы остановить игру.\n\n'
+                             'Итак, мой вопрос:'
+                    ))
+                    await self.app.store.game_logic_accessor.ask_question(game=game, new=False)
                 else:
-                    await self.app.store.vk_api.send_message(
-                        Message(
-                            text=update.object.message.text,
-                            user_id=update.object.message.from_id
-                        )
-                    )
+                    correct = await self.app.store.game_logic_accessor.check_answer(game=game, vk_text=text)
+                    if correct:
+                        await self.app.store.game_db_accessor.add_points(vk_id=update.object.message.from_id,
+                                                                         game=game)
+                        await self.app.store.vk_api.send_message(message=Message(
+                            peer_id=update.object.message.peer_id,
+                            text='Правильно!'
+                        ))
+                        if game.questions_remain:
+                            await self.app.store.game_db_accessor.set_new_question(game=game)
+                            await self.app.store.game_logic_accessor.ask_question(game=game, new=False)
+                        else:
+                            await self.app.store.game_logic_accessor.end_game(game=game)
+                    else:
+                        await self.app.store.vk_api.send_message(message=Message(
+                            peer_id=update.object.message.peer_id,
+                            text='Неправильно!'
+                        ))
+
+            elif not game and text == '/g':
+                await self.app.store.game_logic_accessor.start_game(update.object.message.peer_id)
+            else:
+                await self.app.store.vk_api.send_message(message=Message(
+                    peer_id=update.object.message.peer_id,
+                    text='а?'
+                ))
