@@ -4,3 +4,7 @@ gino
 aiohttp_apispec
 alembic
 psycopg2
+pytest==6.2.4
+pytest-aiohttp==0.3.0
+pytest-cov==2.12.1
+pytest-mock==3.6.1

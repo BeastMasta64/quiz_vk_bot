@@ -74,6 +74,7 @@ class AnswerModel(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     text = db.Column(db.Unicode(), nullable=False)
+    correct = db.Column(db.Boolean, nullable=False)
     question_id = db.Column(db.Integer(), db.ForeignKey('questions.id', ondelete="CASCADE"), nullable=False)
 
 
@@ -89,6 +90,11 @@ class QuestionModel(db.Model):
 
         self._answers: List[AnswerModel] = list()
 
+    def is_answer_right(self, answer_n: int) -> bool:
+        if self._answers[answer_n - 1].correct:
+            return True
+        return False
+
     @property
     def answers(self) -> List[AnswerModel]:
         return self._answers
@@ -97,6 +103,14 @@ class QuestionModel(db.Model):
     def answers(self, val: Optional[AnswerModel]):
         if val is not None:
             self._answers.append(val)
+
+
+class PlayerModel(db.Model):
+    __tablename__ = "players"
+
+    vk_id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    last_name = db.Column(db.String(), nullable=False)
 
 
 class PlayerScoreModel(db.Model):
@@ -113,7 +127,7 @@ class PlayerScoreModel(db.Model):
         self._player: Optional[PlayerModel] = None
 
     @property
-    def player(self):
+    def player(self) -> Optional[PlayerModel]:
         return self._player
 
     @player.setter
@@ -134,8 +148,9 @@ class GameModel(db.Model):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-
+        self._theme: Optional[ThemeModel] = None
         self._player_scores: List[PlayerScoreModel] = list()
+        self.scores_id: List[int] = list()
         self._question: Optional[QuestionModel] = None
 
     def return_winners(self) -> List[Winner]:
@@ -155,27 +170,29 @@ class GameModel(db.Model):
         return winners
 
     @property
-    def player_scores(self):
+    def player_scores(self) -> List[PlayerScoreModel]:
         return self._player_scores
 
     @player_scores.setter
     def player_scores(self, val: Optional[PlayerScoreModel]):
-        if val is not None:
+        if val.id not in self.scores_id and val is not None:
+            self.scores_id.append(val.id)
             self._player_scores.append(val)
 
     @property
-    def question(self):
+    def theme(self) -> Optional[ThemeModel]:
+        return self._theme
+
+    @theme.setter
+    def theme(self, val):
+        if val is not None:
+            self._theme = val
+
+    @property
+    def question(self) -> Optional[QuestionModel]:
         return self._question
 
     @question.setter
     def question(self, val):
         if val is not None:
             self._question = val
-
-
-class PlayerModel(db.Model):
-    __tablename__ = "players"
-
-    vk_id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(), nullable=False)
-    last_name = db.Column(db.String(), nullable=False)

@@ -1,11 +1,12 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 from asyncpg import UniqueViolationError
 from sqlalchemy import func, and_
 
 from app.base.base_accessor import BaseAccessor
 from app.game.models import GameModel, QuestionModel, ThemeModel, AnswerModel, PlayerScoreModel, PlayerModel
+from consts import POINTS_FOR_CORRECT, QUESTION_QUANTITY
 
 
 class GameDbAccessor(BaseAccessor):
@@ -15,7 +16,7 @@ class GameDbAccessor(BaseAccessor):
 
     async def get_questions(self, theme: ThemeModel) -> List[QuestionModel]:
         questions = await QuestionModel.query.where(QuestionModel.theme_id == theme.id).order_by(
-            func.random()).limit(6).gino.all()
+            func.random()).limit(QUESTION_QUANTITY).gino.all()
         return questions
 
     async def create_game(self, peer_id: int) -> GameModel:
@@ -33,28 +34,39 @@ class GameDbAccessor(BaseAccessor):
 
         return game
 
-    async def get_game(self, peer_id: int) -> GameModel:
+    async def get_game(self, peer_id: int) -> Optional[GameModel]:
         game = await (
             GameModel.outerjoin(QuestionModel, GameModel.asked_question == QuestionModel.id)
                 .outerjoin(PlayerScoreModel, GameModel.id == PlayerScoreModel.game_id)
                 .outerjoin(AnswerModel, QuestionModel.id == AnswerModel.question_id)
                 .outerjoin(PlayerModel, PlayerScoreModel.vk_id == PlayerModel.vk_id)
+                .outerjoin(ThemeModel, GameModel.theme_id == ThemeModel.id)
                 .select()
                 .where(and_(GameModel.peer_id == peer_id, GameModel.expire_date > datetime.datetime.now()))
+                .order_by(AnswerModel.id)
                 .gino
+
                 .load(GameModel.distinct(GameModel.id)
-                      .load(question=QuestionModel.load(answers=AnswerModel))
-                      .load(player_scores=PlayerScoreModel.load(player=PlayerModel))
+                      .load(theme=ThemeModel)
+
+
+                      .load(player_scores=PlayerScoreModel
+                            .load(player=PlayerModel)
+                            )
+                      .load(question=QuestionModel
+                            .load(answers=AnswerModel)
+                            .distinct(PlayerScoreModel.id)
+                            )
                       )
+
                 .all()
         )
         if game:
             return game[0]
-        return game
+        return None
 
     async def add_points(self, vk_id: int, game: GameModel):
-        points_for_correct = 10
-        await PlayerScoreModel.update.values(points=PlayerScoreModel.points + points_for_correct).where(
+        await PlayerScoreModel.update.values(points=PlayerScoreModel.points + POINTS_FOR_CORRECT).where(
             and_(PlayerScoreModel.vk_id == vk_id, PlayerScoreModel.game_id == game.id)).gino.status()
 
     async def add_players(self, members_data) -> List[PlayerModel]:

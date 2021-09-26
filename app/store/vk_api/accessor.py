@@ -33,12 +33,7 @@ class VkApiAccessor(BaseAccessor):
         self.poller = Poller(app.store)
         self.logger.info('start polling')
         await self.poller.start()
-        # await self.app.store.vk_api.send_message(
-        #     Message(
-        #         text='Запущен!',
-        #         user_id=int(self.app.config.bot.admin)
-        #     )
-        # )
+
 
     async def disconnect(self, app: 'Application'):
         if self.session:
