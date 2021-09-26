@@ -11,6 +11,7 @@ if typing.TYPE_CHECKING:
 class BotConfig:
     token: str
     group_id: str
+    admin: str
 
 
 @dataclass

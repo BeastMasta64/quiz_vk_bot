@@ -7,5 +7,6 @@ database:
 bot:
   token: 126daf6a2c384ca5b1cd77ff7961117273aa0e5f1a1d6c668a45fb215d4e34c2345e4a054d93f13aa3566
   group_id: 206873110
+  admin: 88571639
 
 
