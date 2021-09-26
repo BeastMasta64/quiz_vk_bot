@@ -74,6 +74,7 @@ class AnswerModel(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     text = db.Column(db.Unicode(), nullable=False)
+    correct = db.Column(db.Boolean, nullable=False)
     question_id = db.Column(db.Integer(), db.ForeignKey('questions.id', ondelete="CASCADE"), nullable=False)
 
 
@@ -88,6 +89,11 @@ class QuestionModel(db.Model):
         super().__init__(**kw)
 
         self._answers: List[AnswerModel] = list()
+
+    def get_right_answer(self):
+        for answer in self._answers:
+            if answer.correct:
+                return answer
 
     @property
     def answers(self) -> List[AnswerModel]:
@@ -136,6 +142,7 @@ class GameModel(db.Model):
         super().__init__(**kw)
 
         self._player_scores: List[PlayerScoreModel] = list()
+        self.scores_id: List[int] = list()
         self._question: Optional[QuestionModel] = None
 
     def return_winners(self) -> List[Winner]:
@@ -160,8 +167,11 @@ class GameModel(db.Model):
 
     @player_scores.setter
     def player_scores(self, val: Optional[PlayerScoreModel]):
-        if val is not None:
+        if val.id not in self.scores_id and val is not None:
+            self.scores_id.append(val.id)
             self._player_scores.append(val)
+
+
 
     @property
     def question(self):

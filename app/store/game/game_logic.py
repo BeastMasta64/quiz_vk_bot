@@ -15,17 +15,23 @@ class GameLogicAccessor(BaseAccessor):
     async def ask_question(self, game: GameModel, new: bool):
         if new:
             game = await self.app.store.game_db_accessor.get_game(peer_id=game.peer_id)
-
+        text = f'''{game.question.text}<br><br>
+        
+        1) {game.question.answers[0].text}<br>
+        2) {game.question.answers[1].text}<br>
+        3) {game.question.answers[2].text}<br>
+        4) {game.question.answers[3].text}
+'''
         await self.app.store.vk_api.send_message(
             message=Message(
                 peer_id=game.peer_id,
-                text=game.question.text
+                text=text
             )
         )
 
     async def check_answer(self, game: GameModel, vk_text: str) -> bool:
-        answer = game.question.answers[0].text
-        if vk_text == answer:
+        answer = game.question.get_right_answer()
+        if vk_text == str(answer.id - 4 * (game.question.id - 1)):
             return True
         return False
 
@@ -34,7 +40,7 @@ class GameLogicAccessor(BaseAccessor):
         winners_str = ''
         for winner in winners:
             winners_str += f'{winner.name} {winner.last_name}, '
-        text = 'Поздравляем победителей! \n\n' + winners_str[:-2] + f' - {winners[0].points} баллов!'
+        text = 'Поздравляем победителей! <br><br>' + winners_str[:-2] + f' - {winners[0].points} баллов!'
         await self.app.store.vk_api.send_message(
             message=Message(
                 text=text,

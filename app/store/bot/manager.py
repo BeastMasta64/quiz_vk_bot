@@ -18,11 +18,13 @@ class BotManager:
 
             game = await self.app.store.game_db_accessor.get_game(peer_id=update.object.message.peer_id)
             if game:
+                if text == '/s':
+                    await self.app.store.game_logic_accessor.end_game(game=game)
                 if text == '/g':
                     await self.app.store.vk_api.send_message(message=Message(
                         peer_id=update.object.message.peer_id,
                         text='Игра уже создана!\n'
-                             'Напишите /stop, чтобы остановить игру.\n\n'
+                             'Напишите /s, чтобы остановить игру.\n\n'
                              'Итак, мой вопрос:'
                     ))
                     await self.app.store.game_logic_accessor.ask_question(game=game, new=False)
@@ -37,14 +39,11 @@ class BotManager:
                         ))
                         if game.questions_remain:
                             await self.app.store.game_db_accessor.set_new_question(game=game)
+                            game = await self.app.store.game_db_accessor.get_game(peer_id=game.peer_id)
                             await self.app.store.game_logic_accessor.ask_question(game=game, new=False)
                         else:
+                            game = await self.app.store.game_db_accessor.get_game(peer_id=game.peer_id)
                             await self.app.store.game_logic_accessor.end_game(game=game)
-                    else:
-                        await self.app.store.vk_api.send_message(message=Message(
-                            peer_id=update.object.message.peer_id,
-                            text='Неправильно!'
-                        ))
 
             elif not game and text == '/g':
                 await self.app.store.game_logic_accessor.start_game(update.object.message.peer_id)

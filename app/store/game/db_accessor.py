@@ -41,11 +41,21 @@ class GameDbAccessor(BaseAccessor):
                 .outerjoin(PlayerModel, PlayerScoreModel.vk_id == PlayerModel.vk_id)
                 .select()
                 .where(and_(GameModel.peer_id == peer_id, GameModel.expire_date > datetime.datetime.now()))
+                .order_by(AnswerModel.id)
                 .gino
+
                 .load(GameModel.distinct(GameModel.id)
-                      .load(question=QuestionModel.load(answers=AnswerModel))
-                      .load(player_scores=PlayerScoreModel.load(player=PlayerModel))
+
+
+                      .load(player_scores=PlayerScoreModel
+                            .load(player=PlayerModel)
+                            )
+                      .load(question=QuestionModel
+                            .load(answers=AnswerModel)
+                            .distinct(PlayerScoreModel.id)
+                            )
                       )
+
                 .all()
         )
         if game:
