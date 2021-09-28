@@ -16,7 +16,9 @@ def ask_question_text(game: GameModel) -> str:
 
     text = f'Вопрос {question}/6<br>' \
            f'{game.question.text}<br><br>'
-    text += (f'{i + 1}) {answer.text}<br>' for i, answer in enumerate(game.question.answers))
+
+    for i, answer in enumerate(game.question.answers):
+        text += f'{i + 1}) {answer.text}<br>'
 
     return text
 

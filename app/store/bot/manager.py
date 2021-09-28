@@ -25,7 +25,7 @@ class BotManager:
                         peer_id=update.object.message.peer_id,
                         text=GAME_EXISTS
                     ))
-                    await self.app.store.game_logic_accessor.ask_question(game=game, new=False)
+                    await self.app.store.game_logic_accessor.ask_question(game=game)
                 else:
                     correct = await self.app.store.game_logic_accessor.check_answer(game=game, vk_text=text)
                     if correct:

@@ -17,11 +17,10 @@ class GameLogicAccessor(BaseAccessor):
             peer_id=game.peer_id
         ))
 
-        await self.ask_question(game, new=True)
+        await self.ask_question(game)
 
-    async def ask_question(self, game: GameModel, new: bool):
-        if new:
-            game = await self.app.store.game_db_accessor.get_game(peer_id=game.peer_id)
+    async def ask_question(self, game: GameModel):
+
         await self.app.store.vk_api.send_message(
             message=Message(
                 peer_id=game.peer_id,
@@ -45,7 +44,7 @@ class GameLogicAccessor(BaseAccessor):
         if game.questions_remain:
             await self.app.store.game_db_accessor.set_new_question(game=game)
             game = await self.app.store.game_db_accessor.get_game(peer_id=game.peer_id)
-            await self.app.store.game_logic_accessor.ask_question(game=game, new=False)
+            await self.app.store.game_logic_accessor.ask_question(game=game)
         else:
             game = await self.app.store.game_db_accessor.get_game(peer_id=game.peer_id)
             await self.app.store.game_logic_accessor.end_game(game=game)
@@ -58,4 +57,5 @@ class GameLogicAccessor(BaseAccessor):
                 peer_id=game.peer_id
             )
         )
+
         await self.app.store.game_db_accessor.end_game(game=game)
