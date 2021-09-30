@@ -155,7 +155,10 @@ class GameModel(db.Model):
 
     def return_winners(self) -> List[Winner]:
         scores = [score.points for score in self._player_scores]
-        max_points = max(scores)
+        try:
+            max_points = max(scores)
+        except:
+            max_points = 0
         winners = []
         for playerscore in self._player_scores:
             if playerscore.points == max_points:
